@@ -13,7 +13,7 @@ services:
       - ./nginx/logs:/var/log/nginx
       - ./php-fpm/log:/var/log
       - ../einvoice:/var/www/html/einvoice
-      - ../kfin:/var/www/html/kfin
+#      - ../kfin:/var/www/html/kfin
     depends_on:
       - einvoice-operation
       - einvoice-backend
@@ -27,7 +27,7 @@ services:
   einvoice-operation:
     build:
       context: ./php-fpm
-      dockerfile: php82.dockerfile
+      dockerfile: php82-mssql.dockerfile
     container_name: einvoice-operation
     volumes:
       - ../einvoice/einvoice-operation:/var/www/html/einvoice/einvoice-operation
@@ -39,12 +39,19 @@ services:
   einvoice-backend:
     platform: linux/amd64
     build:
-      context: ./php-fpm
-      dockerfile: php74-mssql.dockerfile
+      context: .
+      dockerfile: php-fpm/php74-mssql.dockerfile
     container_name: einvoice-backend
     volumes:
       - ../einvoice/kv-einvoice-backend:/var/www/html/einvoice/kv-einvoice-backend
       - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./config/hosts:/etc/hosts.additional
+    environment:
+      - "PHP_IDE_CONFIG=serverName=einvoice-backend"
+      - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app-network
     restart: unless-stopped
@@ -52,13 +59,14 @@ services:
   einvoice-search-api:
     platform: linux/amd64
     build:
-      context: ./php-fpm
-      dockerfile: php74-mssql.dockerfile
+      context: .
+      dockerfile: php-fpm/php74-mssql.dockerfile
     container_name: einvoice-search-api
     volumes:
       - ../einvoice/kv-einvoice-search-api:/var/www/html/einvoice/kv-einvoice-search-api
       - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./config/hosts:/etc/hosts.additional
     environment:
       - "PHP_IDE_CONFIG=serverName=einvoice-search-api"
       - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
@@ -95,20 +103,20 @@ services:
     tty: true
 
   # MariaDB Service
-  mariadb:
-    image: mariadb:10.6
-    container_name: mariadb
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-    volumes:
-      - mariadb-data:/var/lib/mysql
-    networks:
-      - app-network
-    restart: unless-stopped
+#  mariadb:
+#    image: mariadb:10.6
+#    container_name: mariadb
+#    ports:
+#      - "3306:3306"
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=root
+#      - MYSQL_USER=root
+#      - MYSQL_PASSWORD=root
+#    volumes:
+#      - mariadb-data:/var/lib/mysql
+#    networks:
+#      - app-network
+#    restart: unless-stopped
 
   # Redis Service
   redis:
@@ -123,19 +131,19 @@ services:
     restart: unless-stopped
 
   # MongoDB Service
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
-    volumes:
-      - mongodb-data:/data/db
-    networks:
-      - app-network
-    restart: unless-stopped
+#  mongodb:
+#    image: mongo:latest
+#    container_name: mongodb
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      - MONGO_INITDB_ROOT_USERNAME=root
+#      - MONGO_INITDB_ROOT_PASSWORD=root
+#    volumes:
+#      - mongodb-data:/data/db
+#    networks:
+#      - app-network
+#    restart: unless-stopped
 
 # Networks
 networks:
@@ -144,9 +152,9 @@ networks:
 
 # Volumes
 volumes:
-  mariadb-data:
-    driver: local
+#  mariadb-data:
+#    driver: local
   redis-data:
     driver: local
-  mongodb-data:
-    driver: local
+#  mongodb-data:
+#    driver: local

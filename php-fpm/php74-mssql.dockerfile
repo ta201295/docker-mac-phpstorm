@@ -65,13 +65,17 @@ RUN pecl install xdebug-3.1.6 \
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Copy entrypoint script
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Add user for laravel application
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
 
-# Change current user to www
-USER www
-
-# Expose port 9000 and start php-fpm server
+# Expose port 9000
 EXPOSE 9000
+
+# Đặt entrypoint script
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
