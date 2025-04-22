@@ -45,6 +45,10 @@ RUN pecl install redis && docker-php-ext-enable redis
 # Install MongoDB extension (use legacy version for PHP 7.4)
 RUN pecl install mongodb-1.13.0 && docker-php-ext-enable mongodb
 
+# Install Xdebug
+RUN pecl install xdebug-3.1.6 \
+    && docker-php-ext-enable xdebug
+
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 

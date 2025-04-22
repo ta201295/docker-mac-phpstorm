@@ -13,12 +13,13 @@ services:
       - ./nginx/logs:/var/log/nginx
       - ./php-fpm/log:/var/log
       - ../einvoice:/var/www/html/einvoice
-#      - ../kfin:/var/www/html/kfin
+      - ../kfin:/var/www/html/kfin
     depends_on:
       - einvoice-operation
       - einvoice-backend
       - einvoice-search-api
-#      - kfcrm
+      - einvoice-file
+      - kfcrm
     networks:
       - app-network
     restart: unless-stopped
@@ -76,18 +77,44 @@ services:
       - app-network
     restart: unless-stopped
 
+  einvoice-file:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: php-fpm/php74-mssql.dockerfile
+    container_name: einvoice-file
+    volumes:
+      - ../einvoice/kv-file-manager:/var/www/html/einvoice/kv-file-manager
+      - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./config/hosts:/etc/hosts.additional
+    environment:
+      - "PHP_IDE_CONFIG=serverName=einvoice-file"
+      - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+    restart: unless-stopped
+
   # PHP-FPM Service (PHP 7.4)
-#  kfcrm:
-#    build:
-#      context: ./php-fpm
-#      dockerfile: php74.dockerfile
-#    container_name: kfcrm
-#    volumes:
-#      - ../kfin/kfcrm:/var/www/html/kfin/kfcrm
-#      - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
-#    networks:
-#      - app-network
-#    restart: unless-stopped
+  kfcrm:
+    build:
+      context: ./php-fpm
+      dockerfile: php74.dockerfile
+    container_name: kfcrm
+    volumes:
+      - ../kfin/kfcrm:/var/www/html/kfin/kfcrm
+      - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    environment:
+      - "PHP_IDE_CONFIG=serverName=kfcrm"
+      - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+    restart: unless-stopped
 
   # Node.js 20
   node20:
@@ -103,20 +130,20 @@ services:
     tty: true
 
   # MariaDB Service
-#  mariadb:
-#    image: mariadb:10.6
-#    container_name: mariadb
-#    ports:
-#      - "3306:3306"
-#    environment:
-#      - MYSQL_ROOT_PASSWORD=root
-#      - MYSQL_USER=root
-#      - MYSQL_PASSWORD=root
-#    volumes:
-#      - mariadb-data:/var/lib/mysql
-#    networks:
-#      - app-network
-#    restart: unless-stopped
+  mariadb:
+    image: mariadb:10.6
+    container_name: mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - app-network
+    restart: unless-stopped
 
   # Redis Service
   redis:
@@ -152,8 +179,8 @@ networks:
 
 # Volumes
 volumes:
-#  mariadb-data:
-#    driver: local
+  mariadb-data:
+    driver: local
   redis-data:
     driver: local
 #  mongodb-data:
