@@ -124,10 +124,28 @@ services:
     container_name: node20
     working_dir: /var/www/html
     volumes:
-      - ../einvoice:/var/www/html/einvoice
+      - ../einvoice/einvoice-operation:/var/www/html/einvoice/einvoice-operation
     networks:
       - app-network
     tty: true
+
+  einvoice-frontend:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: node/angular6.dockerfile
+    container_name: einvoice-frontend
+    working_dir: /app
+    volumes:
+      - ../einvoice/kv-einvoice-frontend-dev:/app
+    ports:
+      - "4200:4200"
+    networks:
+      - app-network
+    tty: true
+    restart: unless-stopped
+    command: >
+      sh -c "ng serve --host 0.0.0.0 --disable-host-check --public-host frontend.einvoice.local"
 
   # MariaDB Service
   mariadb:
