@@ -17,6 +17,7 @@ services:
     depends_on:
       - einvoice-operation
       - einvoice-backend
+      - einvoice-kafka-site
       - einvoice-search-api
       - einvoice-file
       - kfcrm
@@ -53,6 +54,21 @@ services:
       - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  einvoice-kafka-site:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: php-fpm/php74-mssql.dockerfile
+    container_name: einvoice-kafka-site
+    volumes:
+      - ../einvoice/kv-kafka-einvoice-site:/var/www/html/einvoice/kv-kafka-einvoice-site
+      - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./config/hosts:/etc/hosts.additional
     networks:
       - app-network
     restart: unless-stopped
