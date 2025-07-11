@@ -19,6 +19,7 @@ services:
       - einvoice-backend
       - einvoice-kafka-site
       - einvoice-search-api
+      - einvoice-version-manager
       - einvoice-file
       - kfcrm
     networks:
@@ -86,6 +87,26 @@ services:
       - ./config/hosts:/etc/hosts.additional
     environment:
       - "PHP_IDE_CONFIG=serverName=einvoice-search-api"
+      - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  einvoice-version-manager:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: php-fpm/php74-mssql.dockerfile
+    container_name: einvoice-version-manager
+    volumes:
+      - ../einvoice/kv-version-manager:/var/www/html/einvoice/kv-version-manager
+      - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./config/hosts:/etc/hosts.additional
+    environment:
+      - "PHP_IDE_CONFIG=serverName=einvoice-version-manager"
       - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
     extra_hosts:
       - "host.docker.internal:host-gateway"
