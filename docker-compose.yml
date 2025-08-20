@@ -70,6 +70,11 @@ services:
       - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       - ./config/hosts:/etc/hosts.additional
+    environment:
+      - "PHP_IDE_CONFIG=serverName=einvoice-kafka-site"
+      - "XDEBUG_CONFIG=client_host=host.docker.internal log=/var/log/xdebug.log"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app-network
     restart: unless-stopped

@@ -23,6 +23,20 @@ RUN apt-get update && apt-get install -y \
     apt-transport-https \
     lsb-release
 
+# Configure OpenSSL for older TLS versions (for SQL Server 2012)
+RUN echo "openssl_conf = openssl_init" >> /etc/ssl/openssl.cnf \
+    && echo "" >> /etc/ssl/openssl.cnf \
+    && echo "[openssl_init]" >> /etc/ssl/openssl.cnf \
+    && echo "ssl_conf = ssl_sect" >> /etc/ssl/openssl.cnf \
+    && echo "" >> /etc/ssl/openssl.cnf \
+    && echo "[ssl_sect]" >> /etc/ssl/openssl.cnf \
+    && echo "system_default = system_default_sect" >> /etc/ssl/openssl.cnf \
+    && echo "" >> /etc/ssl/openssl.cnf \
+    && echo "[system_default_sect]" >> /etc/ssl/openssl.cnf \
+    && echo "MinProtocol = TLSv1.0" >> /etc/ssl/openssl.cnf \
+    && echo "MaxProtocol = TLSv1.2" >> /etc/ssl/openssl.cnf \
+    && echo "CipherString = DEFAULT@SECLEVEL=1" >> /etc/ssl/openssl.cnf
+
 # Determine OS version
 RUN . /etc/os-release && \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
